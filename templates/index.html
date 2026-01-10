@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>123云盘订阅管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1800px;
+            width: 95%;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow-x: hidden;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        /* 标签页样式 */
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            margin-right: 5px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .tab:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .tab.active {
+            background-color: white;
+            border-bottom: 2px solid white;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .control-panel {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* 分享链接配置行内布局 */
+        .share-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        
+        /* 使用新的容器包裹每行内容 */
+        .share-item-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .share-item-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* 每个表单组的样式 */
+        .share-item-group {
+            display: flex;
+            align-items: center;
+            flex: 1 1 auto;
+            min-width: 100px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* 为所有表单组添加固定宽度，确保对齐 */
+        .share-item-row .share-item-group:nth-child(1) {
+            flex-basis: 180px;
+            max-width: 180px;
+        }
+
+        .share-item-row .share-item-group:nth-child(2) {
+            flex-basis: 120px;
+            max-width: 120px;
+        }
+
+        .share-item-row .share-item-group:nth-child(3) {
+            flex-basis: 520px;
+            max-width: 520px;
+        }
+
+        .share-item-row .share-item-group:nth-child(4) {
+            flex-basis: 200px;
+            max-width: 200px;
+        }
+
+        .share-item-row .share-item-group:nth-child(5) {
+            flex-basis: 160px;
+            max-width: 160px;
+            margin-left: auto;
+        }
+        
+        .share-item label {
+            min-width: auto;
+            margin-right: 1px;
+            font-weight: 500;
+            flex-shrink: 0;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+        
+        .share-item input[type="url"],
+        .share-item input[type="number"],
+        .share-item input[type="text"] {
+            width: 100%;
+            max-width: 120px;
+            min-width: 60px;
+            padding: 5px 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            flex-shrink: 1;
+            font-size: 13px;
+        }
+        
+        .share-item select {
+            width: 100%;
+            max-width: 85px;
+            min-width: 70px;
+            padding: 5px 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            flex-shrink: 1;
+            font-size: 13px;
+        }
+        
+        .share-item input[type="checkbox"] {
+            margin-right: 2px;
+            flex-shrink: 0;
+        }
+        
+        /* 按钮样式 */
+        .share-item .save-share-btn {
+            background-color: #28a745 !important;
+            color: white !important;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 5px;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+        
+        .share-item .new-delete-share-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+        
+        /* 文本信息样式 */
+        .share-item-info {
+            font-size: 13px;
+            color: #666;
+            margin-left: 1px;
+            flex-shrink: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 120px;
+            max-width: calc(100% - 55px);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1080px) {
+            .share-item-group {
+                min-width: 90px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .share-item-group {
+                min-width: 100%;
+            }
+            
+            .share-item input[type="url"],
+            .share-item input[type="number"],
+            .share-item input[type="text"] {
+                max-width: 100%;
+            }
+        }
+        
+        /* 表单通用样式 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        /* 下拉框特殊样式 */
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        
+        /* 行内表单元素样式 */
+        .form-group.inline-group label {
+            display: inline-block;
+            margin-bottom: 0;
+            margin-right: 1px;
+            margin-top: 5px;
+        }
+        
+        .form-group.inline-group select {
+            width: auto;
+            display: inline-block;
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+        
+        /* 复选框特殊样式 */
+        .form-group.checkbox-group label {
+            display: inline-block;
+            margin-bottom: 0;
+            margin-right: 1px;
+        }
+        
+        .form-group.checkbox-group input {
+            width: auto;
+            display: inline-block;
+            margin-bottom: 0;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        /* 配置部分 */
+        .config-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        
+        .config-section h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>123云盘订阅管理</h1>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" data-tab="shares">订阅分享链接</div>
+                <div class="tab" data-tab="config">后台基础配置</div>
+            </div>
+            
+            <!-- 分享链接标签内容 -->
+            <div id="shares" class="tab-content active">
+                <div class="control-panel">
+                    <button id="add-share-btn" class="btn btn-primary">添加分享链接</button>
+                </div>
+                
+                <div class="section">
+                    <h2>分享链接配置</h2>
+                    <form id="config-form">
+                        <div id="shares-container" style="overflow-x: hidden; width: 100%;">
+                            <!-- 分享链接将动态生成在此处 -->
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 后台基础配置标签内容 -->
+            <div id="config" class="tab-content">
+                <div class="config-section">
+                    <h2>API配置</h2>
+                    <form id="config-form-1">
+                        <div class="form-group">
+                            <label for="api-client-id">Client ID:</label>
+                            <input type="text" id="api-client-id" placeholder="请输入API Client ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="api-client-secret">Client Secret:</label>
+                            <input type="text" id="api-client-secret" placeholder="请输入API Client Secret">
+                        </div>
+                        <div class="form-group">
+                            <label for="api-retry-count">重试次数</label>
+                            <input type="number" id="api-retry-count" placeholder="3" />
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="config-section">
+                    <h3>转存配置</h3>
+                    <div class="form-group">
+                        <label for="sync-threads">并发线程数</label>
+                        <input type="number" id="sync-threads" placeholder="5" />
+                    </div>
+                </div>
+                
+                <div class="config-section">
+                    <h2>日志配置</h2>
+                    <form id="config-form-3">
+                        <div class="form-group">
+                            <label for="log-level">日志级别:</label>
+                            <select id="log-level">
+                                <option value="DEBUG">DEBUG</option>
+                                <option value="INFO">INFO</option>
+                                <option value="WARNING">WARNING</option>
+                                <option value="ERROR">ERROR</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="log-max-size">日志文件最大大小(MB):</label>
+                            <input type="number" id="log-max-size" min="1" max="100" placeholder="请输入日志文件最大大小 (MB)">
+                        </div>
+                        <div class="form-group">
+                            <label for="log-backup-count">日志备份数量:</label>
+                            <input type="number" id="log-backup-count" min="1" max="10" placeholder="请输入日志备份数量">
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="config-section">
+                    <h2>调度器配置</h2>
+                    <form id="config-form-5">
+                        <div class="form-group">
+                            <label for="scheduler-interval">检查间隔(分钟):</label>
+                            <input type="number" id="scheduler-interval" min="1" max="1440" placeholder="请输入检查间隔">
+                        </div>
+                        <div class="form-group">
+                            <label for="max-history">最大历史记录:</label>
+                            <input type="number" id="max-history" min="1" max="10000" placeholder="请输入最大历史记录">
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="control-panel">
+                    <button id="save-config-btn-2" class="btn btn-primary">保存配置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加分享链接的模态框 -->
+    <div id="add-share-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>添加分享链接</h2>
+            <form id="add-share-form">
+                <div class="form-group">
+                    <label for="new-share-subject">订阅主题:</label>
+                    <input type="text" id="new-share-subject" placeholder="请输入订阅主题" required>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label for="new-share-enabled">启用:</label><input type="checkbox" id="new-share-enabled" checked>
+                </div>
+                <div class="form-group">
+                    <label for="new-share-url">分享链接:</label>
+                    <input type="url" id="new-share-url" placeholder="请输入分享链接" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-share-target-folder-id">目标文件夹ID（转存到根目录填0）:</label>
+                    <input type="number" id="new-share-target-folder-id" placeholder="请输入目标文件夹ID" required>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label for="new-share-preserve-path">保留路径:</label><input type="checkbox" id="new-share-preserve-path">
+                </div>
+                <div class="form-group inline-group">
+                    <label for="new-share-duplicate">重复处理:</label><select id="new-share-duplicate" required>
+                        <option value="1">重命名(自动添加后缀)</option>
+                        <option value="2">覆盖</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-share-password">提取码（可选）:</label>
+                    <input type="text" id="new-share-password" placeholder="请输入分享链接密码">
+                </div>
+                <div class="control-panel">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 标签页切换功能
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // 移除所有活动状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // 添加当前活动状态
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // 模态框功能
+            const modal = document.getElementById('add-share-modal');
+            const addShareBtn = document.getElementById('add-share-btn');
+            const closeBtn = document.querySelector('.close');
+            const form = document.getElementById('add-share-form');
+            
+            // 打开模态框
+            addShareBtn.addEventListener('click', function() {
+                modal.style.display = 'block';
+            });
+            
+            // 关闭模态框
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                form.reset();
+            });
+            
+            // 点击模态框外部关闭
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                    form.reset();
+                }
+            }
+            
+            // 添加分享链接表单提交
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                try {
+                    // 获取现有配置
+                    const configResponse = await fetch('/api/config', { method: 'GET' });
+                    const config = await configResponse.json();
+                    
+                    // 创建新的分享链接配置
+                    const newShare = {
+                        subject: document.getElementById('new-share-subject').value,
+                        enabled: document.getElementById('new-share-enabled').checked,
+                        url: document.getElementById('new-share-url').value,
+                        target_folder_id: parseInt(document.getElementById('new-share-target-folder-id').value),
+                        preserve_path: document.getElementById('new-share-preserve-path').checked,
+                        duplicate: parseInt(document.getElementById('new-share-duplicate').value),
+                        password: document.getElementById('new-share-password').value || ''
+                    };
+                    
+                    // 添加到配置中
+                    if (!config.monitored_shares) {
+                        config.monitored_shares = [];
+                    }
+                    config.monitored_shares.push(newShare);
+                    
+                    // 保存配置
+                    const saveResponse = await fetch('/api/config', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(config)
+                    });
+                    
+                    const result = await saveResponse.json();
+                    if (result.success) {
+                        // 立即调用检查API
+                        await fetch('/api/subscribe/check', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ url: newShare.url })
+                        });
+                        
+                        alert('分享链接添加成功，正在进行首次检查');
+                        modal.style.display = 'none';
+                        form.reset();
+                        await loadConfig(); // 重新加载配置以显示新添加的分享链接
+                    } else {
+                        alert('分享链接添加失败: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('添加分享链接失败:', error);
+                    alert('添加分享链接失败，请检查网络连接或服务器状态');
+                }
+            });
+            
+            // 保存配置（后台基础配置标签页）
+            // 保存配置按钮的点击事件
+            document.getElementById('save-config-btn-2').addEventListener('click', async () => {
+                try {
+                    // 获取现有配置
+                    const existingConfig = await fetch('/api/config', { method: 'GET' })
+                        .then(response => response.json())
+                        .catch(error => ({ monitored_shares: [], logging: {}, scheduler: {} }));
+                    
+                    // 收集API配置
+                    const apiConfig = {
+                        client_id: document.getElementById('api-client-id').value,
+                        client_secret: document.getElementById('api-client-secret').value,
+                        retry_attempts: document.getElementById('api-retry-count').value ? parseInt(document.getElementById('api-retry-count').value) : undefined
+                    };
+                    
+                    // 收集转存配置
+                    const syncConfig = {
+                        thread_pool_size: document.getElementById('sync-threads').value ? parseInt(document.getElementById('sync-threads').value) : undefined
+                    };
+                    
+                    // 收集日志配置
+                    const loggingConfig = {
+                        level: document.getElementById('log-level').value,
+                        max_bytes: document.getElementById('log-max-size').value ? parseInt(document.getElementById('log-max-size').value) * 1024 * 1024 : undefined,
+                        backup_count: document.getElementById('log-backup-count').value ? parseInt(document.getElementById('log-backup-count').value) : undefined
+                    };
+                    
+                    // 收集调度器配置
+                    const schedulerConfig = {
+                        interval_minutes: document.getElementById('scheduler-interval').value ? parseInt(document.getElementById('scheduler-interval').value) : undefined,
+                        max_history: document.getElementById('max-history').value ? parseInt(document.getElementById('max-history').value) : undefined
+                    };
+                    
+                    // 更新配置
+                    const updatedConfig = {
+                        ...existingConfig,
+                        api: { ...existingConfig.api, ...apiConfig },
+                        sync: { ...existingConfig.sync, ...syncConfig },
+                        logging: { ...existingConfig.logging, ...loggingConfig },
+                        scheduler: { ...existingConfig.scheduler, ...schedulerConfig }
+                    };
+                    
+                    // 发送更新后的配置到服务器
+                    const response = await fetch('/api/config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedConfig)
+                    });
+                    
+                    if (response.ok) {
+                        alert('配置保存成功！');
+                        // 不再重新加载页面
+                    } else {
+                        alert('配置保存失败！');
+                    }
+                } catch (error) {
+                    console.error('保存配置时发生错误:', error);
+                    alert('配置保存失败！');
+                }
+            });
+            
+            // 使用事件委托处理按钮点击事件
+            document.getElementById('shares-container').addEventListener('click', async function(event) {
+                // 处理删除按钮点击事件
+                if (event.target.classList.contains('new-delete-share-btn')) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    const index = parseInt(event.target.getAttribute('data-share-index'));
+                    console.log('删除按钮点击，索引:', index);
+                    
+                    // 先显示确认框，确认后再执行删除
+                    const confirmed = confirm('确定要删除这条分享链接吗？');
+                    console.log('用户确认结果:', confirmed);
+                    
+                    if (confirmed) {
+                        console.log('用户确认删除，开始执行删除操作');
+                        await deleteShare(index);
+                    } else {
+                        console.log('用户取消删除操作');
+                    }
+                }
+                // 处理保存按钮点击事件
+                else if (event.target.classList.contains('save-share-btn')) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    const index = parseInt(event.target.getAttribute('data-share-index'));
+                    console.log('保存按钮点击，索引:', index);
+                    
+                    // 找到对应索引的分享链接项
+                    const shareItem = event.target.closest('.share-item');
+                    
+                    // 收集输入框的值（只收集订阅主题和启用状态）
+                    const updatedShare = {
+                        subject: document.getElementById(`share-${index}-subject`).value,
+                        enabled: document.getElementById(`share-${index}-enabled`).checked
+                    };
+                    
+                    // 保存修改
+                    await saveShare(index, updatedShare);
+                }
+            });
+            
+            // 加载配置
+            await loadConfig();
+        });
+        
+        // 加载配置
+        async function loadConfig() {
+            try {
+                // 获取配置数据
+                const configResponse = await fetch('/api/config', { method: 'GET' });
+                const config = await configResponse.json();
+                
+                // 获取监控状态数据
+                const monitorStateResponse = await fetch('/api/monitor_state', { method: 'GET' });
+                const monitorState = await monitorStateResponse.json();
+                
+                // 填充API配置
+                if (config.api) {
+                    document.getElementById('api-client-id').value = config.api.client_id || '';
+                    document.getElementById('api-client-secret').value = config.api.client_secret || '';
+                    document.getElementById('api-retry-count').value = config.api.retry_attempts || 3;
+                }
+                
+                // 填充转存配置
+                if (config.sync) {
+                    document.getElementById('sync-threads').value = config.sync.thread_pool_size || 5;
+                }
+                
+                // 填充日志配置
+                if (config.logging) {
+                    document.getElementById('log-level').value = config.logging.level || 'INFO';
+                    document.getElementById('log-max-size').value = config.logging.max_bytes ? Math.round(config.logging.max_bytes / 1024 / 1024) : '';
+                    document.getElementById('log-backup-count').value = config.logging.backup_count || 5;
+                }
+                
+                // 填充调度器配置
+                if (config.scheduler) {
+                    document.getElementById('scheduler-interval').value = config.scheduler.interval_minutes || 60;
+                    document.getElementById('max-history').value = config.scheduler.max_history || 1000;
+                }
+                
+                // 合并分享链接配置和监控状态
+                const sharesWithState = (config.monitored_shares || []).map(share => {
+                    // 查找对应的监控状态
+                    let shareState = {};
+                    
+                    // 从分享链接中提取share_id和密码
+                    const url = share.url;
+                    const shareIdMatch = url.match(/https?:\/\/[^\/]+\/s\/([^?#]+)/);
+                    
+                    if (shareIdMatch) {
+                        const shareId = shareIdMatch[1];
+                        // 优先使用用户提供的密码，然后尝试从URL中提取密码
+                        let password = share.password;
+                        if (!password) {
+                            const passwordMatch = url.match(/pwd=([^&#]+)/);
+                            if (passwordMatch) {
+                                password = passwordMatch[1];
+                            }
+                        }
+                        
+                        // 生成share_key
+                        const shareKey = `${shareId}_${password || 'no_pwd'}`;
+                        
+                        // 通过share_key查找监控状态
+                        if (monitorState[shareKey]) {
+                            shareState = monitorState[shareKey];
+                        }
+                    }
+                    
+                    // 格式化时间
+                    let formattedLastSyncTime = '从未转存';
+                    if (shareState.last_sync_time) {
+                        const date = new Date(shareState.last_sync_time * 1000);
+                        formattedLastSyncTime = date.toLocaleString();
+                    }
+                    
+                    // 合并数据
+                    return {
+                        ...share,
+                        last_sync_time: formattedLastSyncTime,
+                        last_synced_files_count: shareState.last_synced_files_count || 0
+                    };
+                });
+                
+                // 渲染分享链接
+                renderShares(sharesWithState);
+            } catch (error) {
+                console.error('加载配置失败:', error);
+                alert('加载配置失败，请检查网络连接或服务器状态');
+            }
+        }
+        
+        // 渲染分享链接
+        function renderShares(shares) {
+            const container = document.getElementById('shares-container');
+            container.innerHTML = '';
+            
+            shares.forEach((share, index) => {
+                const shareElement = document.createElement('div');
+                shareElement.className = 'share-item';
+                shareElement.setAttribute('data-share-index', index);
+                
+                shareElement.innerHTML = `
+                    <div class="share-item-row">
+                        <div class="share-item-group">
+                            <label for="share-${index}-subject">订阅主题:</label>
+                            <input type="text" id="share-${index}-subject" value="${share.subject || ''}">
+                        </div>
+                        <div class="share-item-group">
+                            <label for="share-${index}-enabled">启用:</label>
+                            <input type="checkbox" id="share-${index}-enabled" ${share.enabled ? 'checked' : ''}>
+                        </div>
+                        <div class="share-item-group">
+                            <label>分享链接:</label>
+                            <span class="share-item-info">${share.url}</span>
+                        </div>
+                        <div class="share-item-group">
+                            <label>目标文件夹ID:</label>
+                            <span class="share-item-info">${share.target_folder_id}</span>
+                        </div>
+                    </div>
+                    <div class="share-item-row">
+                        <div class="share-item-group">
+                            <label>保留路径:</label>
+                            <span class="share-item-info">${share.preserve_path ? '是' : '否'}</span>
+                        </div>
+                        <div class="share-item-group">
+                            <label>重复:</label>
+                            <span class="share-item-info">${share.duplicate === 1 ? '重命名' : '覆盖'}</span>
+                        </div>
+                        <div class="share-item-group">
+                            <label>提取码（可选）:</label>
+                            <span class="share-item-info">${share.password || ''}</span>
+                        </div>
+                        <div class="share-item-group">
+                            <label>上次转存时间:</label>
+                            <span class="share-item-info">${share.last_sync_time || '从未转存'}</span>
+                        </div>
+                        <div class="share-item-group">
+                            <button class="save-share-btn" data-share-index="${index}">保存</button>
+                            <button class="new-delete-share-btn" data-share-index="${index}">删除</button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(shareElement);
+            });
+        }
+        
+        // 删除分享链接
+        async function deleteShare(index) {
+            console.log('开始执行删除操作，索引:', index);
+            try {
+                // 获取现有配置
+                const response = await fetch('/api/config', { method: 'GET' });
+                const config = await response.json();
+                
+                // 删除指定索引的分享链接
+                if (config.monitored_shares && config.monitored_shares.length > index) {
+                    config.monitored_shares.splice(index, 1);
+                    
+                    // 保存配置
+                    const saveResponse = await fetch('/api/config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(config)
+                    });
+                    
+                    const result = await saveResponse.json();
+                    console.log('删除操作结果:', result);
+                    if (saveResponse.ok && result.success) {
+                        alert('分享链接删除成功');
+                        await loadConfig(); // 重新加载配置以更新界面
+                    } else {
+                        alert('分享链接删除失败: ' + (result.message || '未知错误'));
+                    }
+                }
+            } catch (error) {
+                console.error('删除分享链接失败:', error);
+                alert('删除分享链接失败，请检查网络连接或服务器状态');
+            }
+        }
+        
+        // 保存分享链接修改
+        async function saveShare(index, updatedShare) {
+            console.log('开始保存分享链接修改，索引:', index, '修改内容:', updatedShare);
+            try {
+                // 获取现有配置
+                const response = await fetch('/api/config', { method: 'GET' });
+                const config = await response.json();
+                
+                // 更新指定索引的分享链接
+                if (config.monitored_shares && config.monitored_shares.length > index) {
+                    // 只更新需要修改的字段，保留其他字段不变
+                    config.monitored_shares[index] = {
+                        ...config.monitored_shares[index],
+                        ...updatedShare
+                    };
+                    
+                    // 保存配置
+                    const saveResponse = await fetch('/api/config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(config)
+                    });
+                    
+                    const result = await saveResponse.json();
+                    console.log('保存操作结果:', result);
+                    if (saveResponse.ok && result.success) {
+                        alert('分享链接修改成功');
+                        await loadConfig(); // 重新加载配置以更新界面
+                    } else {
+                        alert('分享链接修改失败: ' + (result.message || '未知错误'));
+                    }
+                }
+            } catch (error) {
+                console.error('保存分享链接修改失败:', error);
+                alert('保存分享链接修改失败，请检查网络连接或服务器状态');
+            }
+        }
+        </script>
+</body>
+</html>

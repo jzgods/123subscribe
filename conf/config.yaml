@@ -1,0 +1,18 @@
+api:
+  client_id: ''
+  client_secret: ''
+  retry_attempts: 3
+  retry_delay: 2
+  timeout: 30
+sync:
+  thread_pool_size: 3
+  max_retries: 5
+monitored_shares: []
+logging:
+  backup_count: 5
+  level: INFO
+  log_file: ./logs/123subscrib.log
+  max_bytes: 10485760
+scheduler:
+  interval_minutes: 2
+  max_history: 1000
