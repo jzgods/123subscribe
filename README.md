@@ -30,7 +30,7 @@ docker pull zhuangjay/123subscrib:latest
 
 1. ✅ 确保您已安装Docker和Docker Compose
 
-2. 📄 直接使用本地的`docker-compose.yml`文件（路径：`c:\Users\JzZyh\Desktop\123subscrib\docker-compose.yml`）
+2. 📄 直接使用该项目的`docker-compose.yml`文件
 
 ### 🌐 访问服务
 
@@ -41,7 +41,7 @@ docker pull zhuangjay/123subscrib:latest
 
 ### 📄 配置文件结构
 
-配置文件位于`conf/config.yaml`，包含以下主要部分：
+配置文件位于`conf/config.yaml`，包含以下主要部分（所有配置均可在前端界面设置）：
 
 ```yaml
 api:
