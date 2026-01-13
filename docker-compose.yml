@@ -6,6 +6,7 @@ services:
     environment:
       APP_USERNAME: admin  # 管理员用户名
       APP_PASSWORD: admin123  # 管理员密码
+      TZ: Asia/Shanghai
     volumes:
       # 配置文件持久化
       - ./conf/:/app/conf/
